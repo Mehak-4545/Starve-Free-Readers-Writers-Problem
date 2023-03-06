@@ -1,11 +1,11 @@
 //Starve-Free Readers-Writers Problem
 
-A starve free solution to a classical synchronisation problem
+A starve free solution to a classical synchronization problem.
 
 
 A brief overview of the Readers-Writers problem:
 This is a standard problem in process synchronization. It is encountered when a dataset like a file or a database has to be shared between several processes at a time. On the basis of the action they perform, these processes are classified into two types, these being, Reader-processes which can only read from the dataset, cannot modify its contents, and Writer-processes which can both read from the dataset as well as write into it.
-Allowing multiple readers access to the dataset concurrently is allowed as the contents of the dataset are in a consistent state and no process is trying to update its contents. Thus, readers do not require exclusive access to the "critical section".
+Allowing multiple readers access to the dataset concurrently is allowed as the contents of the dataset are in a consistent state and no process is trying to update its contents. Thus, readers do not require exclusive access to the "Critical Section".
 However, this is not valid for a writer. If a writer executes concurrently with a reader or another writer, then it may result in redundant/wrong value being read by the reader or in a race condition between writers.
 
 
@@ -72,21 +72,20 @@ reader(int processID){
 
 //Starvation of Writers
 
-However, there is yet another problem that arises in this implementation, the problem of starvation of writer process. In the above implementation there is a clear prefrence given to reader processes over the writer processes. A write request is serviced only when there are no other read readers present. If new reader processes keep entering while there are other readers present in the critical section, and such a situation arises that the CR is never devoid of readers, then it will lead to starvation of writer processes.
+However, yet another problem arises in this implementation, the problem of starvation of writer process. In the above implementation there is a clear prefrence given to reader processes over the writer processes. A write request is serviced only when there are no other readers present. If new reader processes keep entering while there are other readers present in the critical section, and such a situation arises that the CR is never devoid of readers, then it will lead to starvation of writer processes.
 
-A solution to eliminate starvation is to implement an FCFS-type ie First-Come-First-Serve type scheme.This can be implemented using an additional boolean 'read' using which the writer process can prevent the reader process which arrive after it from entering the critical section. 
+A solution to eliminate starvation is to implement an FCFS-type ie First-Come-First-Serve type scheme.This can be implemented using an additional semaphore 'read' using which the writer process can prevent the reader process which arrive after it from entering the critical section. 
 
 
 //Readers-Writers Problem : Starvation free
 
-//semaphores - write, mutex
+//semaphores - write, mutex, read
 //integer - read_count
-//boolean - read
 
 writer(int processID){
     do{
-        read = false;
-        /*writer immediately blocks 'read' to prevent more readers fromentering the CR, in effect, blocking the queue */
+        wait(read);
+        /*writer immediately blocks 'read' to prevent more readers from entering the Critical Region, in effect, blocking the queue */
 
         wait(write);    //if readers are reading, writer has to wait
 
@@ -98,22 +97,22 @@ writer(int processID){
 
         //writer leaves CR
         signal(write);
-        read = true;  //writer unblocks 'read'
+        signal(read);  //writer unblocks 'read'
 
     }while(true)
 }
 
-raeder(int processID){
+reader(int processID){
     do{
 
-        if(read == true){      //new reader allowed only if 'read' semaphore is unblocked
-            wait(mutex);
-            read_count++;
-            if(read_count==1){
-                wait(write);
-            }
-            signal(mutex);
+        wait(read);      //new reader allowed only if 'read' semaphore is unblocked
+        
+        wait(mutex);
+        read_count++;
+        if(read_count==1){
+            wait(write);
         }
+        signal(mutex);
 
 
         ********
@@ -132,6 +131,6 @@ raeder(int processID){
 }
 
 
-//Refrences used
-1)Abraham Silberschatz, Peter B. Galvin, Greg Gagne - Operating System Concepts
-
+//References used
+1. Abraham Silberschatz, Peter B. Galvin, Greg Gagne - Operating System Concepts
+2. https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem
