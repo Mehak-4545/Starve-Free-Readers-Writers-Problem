@@ -144,6 +144,8 @@ void reader(int processID){
             wait(write);
         }
         signal(mutex);
+        
+        signal(read);
 
 
         ********
